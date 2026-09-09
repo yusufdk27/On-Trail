@@ -72,37 +72,34 @@ struct CourseVisualizerView: View {
             .ignoresSafeArea()
             .navigationBarBackButtonHidden(true)
             .toolbar {
-                // Leading: Circular Frosted Glass Back Button
+                // Leading: Circular Frosted Glass Back Button (Matching 44pt target from screenshot)
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         appState.clearCurrentCourse()
                     } label: {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 14, weight: .bold))
+                            .font(.system(size: 19, weight: .bold))
                             .foregroundStyle(Theme.textPrimary)
-                            .frame(width: 36, height: 36)
+                            .frame(width: 44, height: 44)
                             .background(.ultraThinMaterial, in: Circle())
                             .overlay(Circle().stroke(Theme.cardBorder, lineWidth: 0.8))
-                            .shadow(color: Color.black.opacity(0.12), radius: 6, y: 2)
+                            .shadow(color: Color.black.opacity(0.10), radius: 6, y: 2)
                     }
+                    .buttonStyle(.plain)
                 }
                 
-                // Center: Floating Frosted Capsule Course Name Pill
+                // Center: Course Name (Clean bold title directly on map, matching screenshot)
                 ToolbarItem(placement: .principal) {
                     Text(strategy.courseName)
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .font(.system(size: 19, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
                         .lineLimit(1)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 7)
-                        .background(.ultraThinMaterial, in: Capsule())
-                        .overlay(Capsule().stroke(Theme.cardBorder, lineWidth: 0.8))
-                        .shadow(color: Color.black.opacity(0.12), radius: 6, y: 2)
+                        .truncationMode(.tail)
                 }
                 
-                // Trailing: Blue Capsule Save Button
+                // Trailing: Vibrant Blue Capsule Save Button (Matching screenshot)
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") {
+                    Button {
                         withAnimation {
                             isSavedFeedback = true
                         }
@@ -112,13 +109,16 @@ struct CourseVisualizerView: View {
                                 isSavedFeedback = false
                             }
                         }
+                    } label: {
+                        Text("Save")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 8)
+                            .background(Color(red: 0.0, green: 0.48, blue: 1.0), in: Capsule())
+                            .shadow(color: Color(red: 0.0, green: 0.48, blue: 1.0).opacity(0.35), radius: 6, y: 2)
                     }
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .buttonStyle(.borderedProminent)
-                    .buttonBorderShape(.capsule)
-                    .controlSize(.small)
-                    .tint(Color.blue)
-                    .shadow(color: Color.blue.opacity(0.3), radius: 6, y: 2)
+                    .buttonStyle(.plain)
                 }
             }
             .toolbarBackground(.hidden, for: .navigationBar)
