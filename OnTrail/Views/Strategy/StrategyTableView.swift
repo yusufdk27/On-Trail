@@ -20,7 +20,7 @@ struct StrategyTableView: View {
         VStack(alignment: .leading, spacing: 8) {
             // Section Header
             Text("Strategy")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .font(Theme.trailSectionHeading)
                 .foregroundStyle(Theme.textPrimary)
             
             // Table Container Card
@@ -28,60 +28,70 @@ struct StrategyTableView: View {
                 // Table Header Row
                 HStack(spacing: 8) {
                     Text("-")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Color.secondary)
-                        .frame(width: 20, alignment: .leading)
+                        .font(Theme.trailTableHeader)
+                        .foregroundStyle(Theme.textSecondary)
+                        .frame(width: 22, alignment: .leading)
                     
                     Text("Distance")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.secondary)
-                        .frame(width: 75, alignment: .leading)
+                        .font(Theme.trailTableHeader)
+                        .foregroundStyle(Theme.textSecondary)
+                        .frame(width: 85, alignment: .leading)
                     
                     Text("Average Pace")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.secondary)
-                        .frame(width: 95, alignment: .leading)
+                        .font(Theme.trailTableHeader)
+                        .foregroundStyle(Theme.textSecondary)
+                        .frame(width: 110, alignment: .leading)
                     
                     Spacer()
                     
                     Text("Elevation")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.secondary)
+                        .font(Theme.trailTableHeader)
+                        .foregroundStyle(Theme.textSecondary)
                         .frame(alignment: .trailing)
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
                 
                 Divider()
-                    .background(Theme.borderGray.opacity(0.4))
+                    .background(Theme.borderGray.opacity(0.35))
                 
                 // Table Body Rows
                 if let seg = focusedSegment {
                     // Screen 4: Sub-splits within the selected segment
                     let splits = seg.splits(intervalMeters: 1000, effortFactor: effortFactor)
-                    ForEach(splits) { split in
+                    ForEach(Array(splits.enumerated()), id: \.element.id) { index, split in
                         splitRow(split)
+                        
+                        if index < splits.count - 1 {
+                            Divider()
+                                .background(Theme.borderGray.opacity(0.35))
+                        }
                     }
                 } else {
                     // Screen 2: All course segments (Start - End overview)
-                    ForEach(strategy.segments) { segment in
+                    ForEach(Array(strategy.segments.enumerated()), id: \.element.id) { index, segment in
                         Button {
                             onSelectSegment?(segment.segmentIndex)
                         } label: {
                             segmentRow(segment)
                         }
                         .buttonStyle(.plain)
+                        
+                        if index < strategy.segments.count - 1 {
+                            Divider()
+                                .background(Theme.borderGray.opacity(0.35))
+                        }
                     }
                 }
             }
-            .padding(.bottom, 6)
+            .padding(.vertical, 4)
             .background(Theme.slateGray)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadiusCard, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.cornerRadiusCard, style: .continuous)
                     .stroke(Theme.cardBorder, lineWidth: 0.8)
             )
-            .shadow(color: Color.black.opacity(0.03), radius: 5, y: 1.5)
+            .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
         }
     }
     
@@ -105,33 +115,33 @@ struct StrategyTableView: View {
         return HStack(spacing: 8) {
             // Phase Arrow Icon
             phaseIcon(for: segment.phase)
-                .frame(width: 20, alignment: .leading)
+                .frame(width: 22, alignment: .leading)
             
             // Distance
             Text(distanceStr)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(Theme.trailTableValue)
                 .foregroundStyle(Theme.textPrimary)
                 .monospacedDigit()
-                .frame(width: 75, alignment: .leading)
+                .frame(width: 85, alignment: .leading)
             
             // Average Pace
             Text(paceStr)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(Theme.trailTableValue)
                 .foregroundStyle(Theme.textPrimary)
                 .monospacedDigit()
-                .frame(width: 95, alignment: .leading)
+                .frame(width: 110, alignment: .leading)
             
             Spacer()
             
             // Elevation
             Text(String(format: "%.0f m", elevM))
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(Theme.trailTableValue)
                 .foregroundStyle(Theme.textPrimary)
                 .monospacedDigit()
                 .frame(alignment: .trailing)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 7)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
         .contentShape(Rectangle())
     }
     
@@ -141,33 +151,33 @@ struct StrategyTableView: View {
         HStack(spacing: 8) {
             // Phase Arrow Icon
             phaseIcon(for: split.phase)
-                .frame(width: 20, alignment: .leading)
+                .frame(width: 22, alignment: .leading)
             
             // Distance
             Text(split.distanceFormatted)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(Theme.trailTableValue)
                 .foregroundStyle(Theme.textPrimary)
                 .monospacedDigit()
-                .frame(width: 75, alignment: .leading)
+                .frame(width: 85, alignment: .leading)
             
             // Average Pace
             Text(split.paceFormatted)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(Theme.trailTableValue)
                 .foregroundStyle(Theme.textPrimary)
                 .monospacedDigit()
-                .frame(width: 95, alignment: .leading)
+                .frame(width: 110, alignment: .leading)
             
             Spacer()
             
             // Elevation
             Text(split.elevationFormatted)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(Theme.trailTableValue)
                 .foregroundStyle(Theme.textPrimary)
                 .monospacedDigit()
                 .frame(alignment: .trailing)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 7)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
     }
     
     // MARK: - Phase Arrow Icon
@@ -177,16 +187,16 @@ struct StrategyTableView: View {
             switch phase {
             case .climb:
                 Image(systemName: "arrow.up.right")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color(red: 0.95, green: 0.32, blue: 0.32)) // Red/Coral Climb
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Theme.phaseClimb)
             case .flat:
                 Image(systemName: "arrow.right")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color(red: 0.22, green: 0.78, blue: 0.42)) // Green Flat
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Theme.phaseFlat)
             case .descent:
                 Image(systemName: "arrow.down.right")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color(red: 0.28, green: 0.60, blue: 0.98)) // Blue Descent
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Theme.phaseDescent)
             }
         }
     }

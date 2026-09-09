@@ -62,44 +62,46 @@ struct ElevationProfileChart: View {
                         x: .value("Distance", point.distanceFromStart),
                         y: .value("Elevation", point.elevation)
                     )
-                    .foregroundStyle(Theme.chartLimeGradient)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [
+                                Theme.trailLime.opacity(0.35),
+                                Theme.trailLime.opacity(0.12),
+                                Theme.trailLime.opacity(0.02)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                     .interpolationMethod(.monotone)
                     
                     LineMark(
                         x: .value("Distance", point.distanceFromStart),
                         y: .value("Elevation", point.elevation)
                     )
-                    .foregroundStyle(Theme.chartLimeColor)
+                    .foregroundStyle(Theme.trailLime)
                     .interpolationMethod(.monotone)
-                    .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                    .lineStyle(StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round))
                 }
                 
-                // Checkpoints / Aid Stations Pins along elevation line
-                ForEach(strategy.checkpoints) { cp in
-                    if (focusedSegment == nil || (cp.distanceFromStart >= (focusedSegment?.startDistance ?? 0) && cp.distanceFromStart <= (focusedSegment?.endDistance ?? 0))),
-                       let ele = cp.elevation {
-                        PointMark(
-                            x: .value("Distance", cp.distanceFromStart),
-                            y: .value("Elevation", ele)
-                        )
-                        .foregroundStyle(Theme.warningYellow)
-                        .symbolSize(28)
-                        .annotation(position: .top, spacing: 4) {
-                            Text(shortCode(cp.name))
-                                .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                .foregroundStyle(Theme.warningYellow)
-                                .padding(.horizontal, 3)
-                                .padding(.vertical, 1)
-                                .background(Color.black.opacity(0.85))
-                                .clipShape(RoundedRectangle(cornerRadius: 3))
-                        }
+                // Key Course Landmark Points (as seen in Image 1)
+                ForEach(displayPoints.enumerated().filter { $0.offset % max(1, displayPoints.count / 4) == 0 }.map(\.element)) { pt in
+                    PointMark(
+                        x: .value("Distance", pt.distanceFromStart),
+                        y: .value("Elevation", pt.elevation)
+                    )
+                    .symbol {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 6, height: 6)
+                            .overlay(Circle().stroke(Theme.trailLime, lineWidth: 2))
                     }
                 }
                 
                 // Interactive Scrub Rule Marker
                 if let selected = selectedDistance {
                     RuleMark(x: .value("Selected", selected))
-                        .foregroundStyle(Theme.neonOrange)
+                        .foregroundStyle(Theme.targetOrange)
                         .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
                     
                     if let pt = nearestPoint(to: selected) {
@@ -107,8 +109,8 @@ struct ElevationProfileChart: View {
                             x: .value("Selected", selected),
                             y: .value("Elevation", pt.elevation)
                         )
-                        .foregroundStyle(Theme.neonOrange)
-                        .symbolSize(42)
+                        .foregroundStyle(Theme.targetOrange)
+                        .symbolSize(36)
                     }
                 }
             }
@@ -119,52 +121,51 @@ struct ElevationProfileChart: View {
                     AxisValueLabel {
                         if let dist = value.as(Double.self) {
                             Text(String(format: "%.0fkm", dist / 1000.0))
-                                .font(.system(size: 9, weight: .medium, design: .monospaced))
-                                .foregroundStyle(Theme.textTertiary)
+                                .font(Theme.trailAxisLabel)
+                                .foregroundStyle(Color.secondary.opacity(0.8))
                         }
                     }
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
-                        .foregroundStyle(Theme.borderGray.opacity(0.35))
                 }
             }
             .chartYAxis {
-                // Left Y-Axis: Pace Reference Labels (matching mockup: 20'00", 15'00", 10'00", etc.)
+                // Left Y-Axis: Pace Reference Labels (matching Image 1: 20'00", 15'00", 10'00", etc.)
                 AxisMarks(position: .leading, values: .automatic(desiredCount: 5)) { value in
                     AxisValueLabel {
                         if let ele = value.as(Double.self) {
                             let ratio = max(0.0, min(1.0, (ele - yDomain.lowerBound) / max(1.0, (yDomain.upperBound - yDomain.lowerBound))))
                             let paceMin = Int((1.0 - ratio) * 20.0)
                             Text(String(format: "%02d'00\"", paceMin))
-                                .font(.system(size: 8, weight: .medium, design: .monospaced))
-                                .foregroundStyle(Theme.textTertiary.opacity(0.8))
+                                .font(Theme.trailAxisLabel)
+                                .foregroundStyle(Color.secondary.opacity(0.8))
                         }
                     }
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                        .foregroundStyle(Theme.gridLine)
                 }
                 
-                // Right Y-Axis: Elevation Labels (matching mockup: 800m, 600m, 400m, etc.)
+                // Right Y-Axis: Elevation Labels (matching Image 1: 800m, 600m, 400m, etc.)
                 AxisMarks(position: .trailing, values: .automatic(desiredCount: 5)) { value in
                     AxisValueLabel {
                         if let ele = value.as(Double.self) {
                             Text(String(format: "%.0fm", ele))
-                                .font(.system(size: 8, weight: .medium, design: .monospaced))
-                                .foregroundStyle(Theme.textTertiary.opacity(0.8))
+                                .font(Theme.trailAxisLabel)
+                                .foregroundStyle(Color.secondary.opacity(0.8))
                         }
                     }
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
-                        .foregroundStyle(Theme.borderGray.opacity(0.35))
                 }
             }
             .chartXSelection(value: $selectedDistance)
-            .frame(height: 135)
+            .frame(height: 145)
         }
-        .padding(10)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
         .background(Theme.slateGray)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadiusCard, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.cornerRadiusCard, style: .continuous)
                 .stroke(Theme.cardBorder, lineWidth: 0.8)
         )
-        .shadow(color: Color.black.opacity(0.03), radius: 5, y: 1.5)
+        .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
     }
     
     // MARK: - Header

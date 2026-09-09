@@ -154,7 +154,60 @@ enum Theme {
         endPoint: .trailing
     )
     
-    // MARK: - Typography
+    // MARK: - Apple HIG Design Tokens for Trail & Navigation
+    
+    /// Accent Lime for Elevation Profile
+    static let trailLime = Color(red: 0.68, green: 0.93, blue: 0.15) // #AEEB26
+    
+    /// Target Time Bright Orange (#FF7A00)
+    static let targetOrange = Color(red: 1.0, green: 0.48, blue: 0.0)
+    
+    /// Water Station & Active Track Blue (#007AFF)
+    static let waterBlue = Color(red: 0.0, green: 0.48, blue: 1.0)
+    
+    /// Phase Arrow Colors (matching Apple HIG System Colors)
+    static let phaseClimb = Color(red: 1.0, green: 0.23, blue: 0.19) // #FF3B30
+    static let phaseFlat = Color(red: 0.20, green: 0.78, blue: 0.35)  // #34C759
+    static let phaseDescent = Color(red: 0.0, green: 0.48, blue: 1.0) // #007AFF
+    
+    /// Solid subtle hairline grid for elevation chart
+    static let gridLine = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(white: 1.0, alpha: 0.10)
+            : UIColor(red: 0.90, green: 0.90, blue: 0.92, alpha: 0.8)
+    })
+    
+    // MARK: - Typography (Apple HIG Scales)
+    
+    /// Digital Clock (Goal finish & Water Station)
+    static let trailClock = Font.system(size: 36, weight: .bold, design: .rounded)
+    
+    /// Summary Metric Values (Distance, Ascent, Descent)
+    static let trailMetricValue = Font.system(size: 21, weight: .bold, design: .rounded)
+    
+    /// Summary Metric Labels (Distance, Total Ascent, etc.)
+    static let trailMetricLabel = Font.system(size: 13, weight: .medium, design: .default)
+    
+    /// Strategy Table Data Row Values
+    static let trailTableValue = Font.system(size: 17, weight: .bold, design: .rounded)
+    
+    /// Strategy Table Header Labels
+    static let trailTableHeader = Font.system(size: 13, weight: .medium, design: .default)
+    
+    /// Sub-metric Value (Average Pace, GAP, Elevation)
+    static let trailSubmetricValue = Font.system(size: 17, weight: .bold, design: .rounded)
+    
+    /// Sub-metric Caption (Average Pace, GAP, Elevation)
+    static let trailSubmetricLabel = Font.system(size: 13, weight: .regular, design: .default)
+    
+    /// Card Title Badges (Target Time, Water Station)
+    static let trailCardBadge = Font.system(size: 13, weight: .bold, design: .rounded)
+    
+    /// Section Heading outside cards (Goal Finish, Strategy)
+    static let trailSectionHeading = Font.system(size: 17, weight: .bold, design: .rounded)
+    
+    /// Chart Axis Labels
+    static let trailAxisLabel = Font.system(size: 11, weight: .regular, design: .default)
     
     /// Large title (e.g., course name).
     static let largeTitle = Font.system(size: 28, weight: .bold, design: .default)
@@ -185,6 +238,8 @@ enum Theme {
     
     // MARK: - Corner Radii
     
+    /// Card corner radius matching Apple HIG mockups (22pt)
+    static let cornerRadiusCard: CGFloat = 22
     static let cornerRadiusSmall: CGFloat = 8
     static let cornerRadiusMedium: CGFloat = 12
     static let cornerRadiusLarge: CGFloat = 16

@@ -150,7 +150,11 @@ struct CourseVisualizerView: View {
                 segmentSwitcherHeader
                 
                 // Summary Metrics Row: Distance, Total Ascent / Pace, Total Descent / Elevation
-                metricsSummaryRow
+                MetricsSummaryRowView(
+                    strategy: strategy,
+                    focusedSegment: currentSegment,
+                    effortFactor: appState.effortFactor
+                )
                 
                 // Swift Charts Elevation Profile (Lime-Green Gradient)
                 ElevationProfileChart(
@@ -161,9 +165,25 @@ struct CourseVisualizerView: View {
                 
                 if currentSegment == nil {
                     // SCREEN 2 (Start - End): Goal Finish + Water Station + Course Strategy
-                    goalFinishSection
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Goal Finish")
+                            .font(Theme.trailSectionHeading)
+                            .foregroundStyle(Theme.textPrimary)
+                        
+                        GoalFinishCardView(
+                            strategy: strategy,
+                            effortFactor: appState.effortFactor,
+                            pitstopSeconds: appState.pitstopDurationSeconds,
+                            effortSliderValue: Binding(
+                                get: { appState.effortSliderValue },
+                                set: { appState.effortSliderValue = $0 }
+                            )
+                        )
+                    }
                     
-                    waterStationSummaryCard
+                    WaterStationCardView(pitstopSeconds: appState.pitstopDurationSeconds) {
+                        showingRaceStartTimePicker = true
+                    }
                     
                     StrategyTableView(
                         strategy: strategy,
@@ -313,242 +333,7 @@ struct CourseVisualizerView: View {
         }
     }
     
-    // MARK: - Metrics Summary Row
-    
-    private var metricsSummaryRow: some View {
-        HStack(spacing: 0) {
-            if let seg = currentSegment {
-                // Segment-Specific Metrics (Screens 3 & 4)
-                // Distance
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Distance")
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundStyle(Color.secondary)
-                    
-                    HStack(spacing: 4) {
-                        Text("/\\")
-                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text(formatMeters(seg.distance))
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.textPrimary)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // Average Pace
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Average Pace")
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundStyle(Color.secondary)
-                    
-                    let adjPace = seg.targetPaceSecondsPerKm * appState.effortFactor
-                    Text(PacingZone.formatPace(adjPace, showUnit: false) + " /km")
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.textPrimary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // Elevation
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("Elevation")
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundStyle(Color.secondary)
-                    
-                    let elevM = seg.phase == .climb ? seg.elevationGain : (seg.phase == .descent ? seg.elevationLoss : seg.elevationGain)
-                    Text(String(format: "%.0f m", elevM))
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.textPrimary)
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing)
-            } else {
-                // Course Overview Metrics (Screens 1 & 2)
-                // Distance
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Distance")
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundStyle(Color.secondary)
-                    
-                    HStack(spacing: 4) {
-                        Text("/\\")
-                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text(String(format: "%.2f km", strategy.totalDistanceKm))
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.textPrimary)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // Total Ascent
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Total Ascent")
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundStyle(Color.secondary)
-                    
-                    HStack(spacing: 3) {
-                        Image(systemName: "arrow.up.right")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text(String(format: "%.0f m", strategy.totalElevationGain))
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.textPrimary)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // Total Descent
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("Total Descent")
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundStyle(Color.secondary)
-                    
-                    HStack(spacing: 3) {
-                        Image(systemName: "arrow.down.right")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text(String(format: "%.0f m", strategy.totalElevationLoss))
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.textPrimary)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-        }
-    }
-    
-    // MARK: - Goal Finish Section (Screen 2)
-    
-    private var goalFinishSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Goal Finish")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundStyle(Theme.textPrimary)
-            
-            VStack(alignment: .leading, spacing: 10) {
-                // Target Time Badge
-                HStack(spacing: 5) {
-                    Image(systemName: "target")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Color(red: 1.0, green: 0.58, blue: 0.0))
-                    
-                    Text("Target Time")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color(red: 1.0, green: 0.58, blue: 0.0))
-                    
-                    Spacer()
-                }
-                
-                // Big Digital Clock
-                let dynamicFinish = strategy.dynamicGoalFinishFormatted(
-                    effortFactor: appState.effortFactor,
-                    pitstopSeconds: appState.pitstopDurationSeconds
-                )
-                Text(dynamicFinish)
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundStyle(Theme.textPrimary)
-                    .monospacedDigit()
-                
-                // Custom Effort Slider (Tortoise - Dotted Track - Hare)
-                EffortSliderView(value: Binding(
-                    get: { appState.effortSliderValue },
-                    set: { appState.effortSliderValue = $0 }
-                ))
-                .padding(.top, 2)
-                
-                // 3-Column Summary Metrics
-                HStack(spacing: 8) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(strategy.dynamicAveragePaceFormatted(effortFactor: appState.effortFactor))
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("Average Pace")
-                            .font(.system(size: 10, weight: .regular))
-                            .foregroundStyle(Color.secondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(strategy.dynamicAverageGAPFormatted(effortFactor: appState.effortFactor))
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("Average GAP")
-                            .font(.system(size: 10, weight: .regular))
-                            .foregroundStyle(Color.secondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text(String(format: "%.0f m", strategy.totalElevationGain))
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("Elevation")
-                            .font(.system(size: 10, weight: .regular))
-                            .foregroundStyle(Color.secondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-                .padding(.top, 4)
-            }
-            .padding(14)
-            .background(Theme.slateGray)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Theme.cardBorder, lineWidth: 0.8)
-            )
-            .shadow(color: Color.black.opacity(0.03), radius: 5, y: 1.5)
-        }
-    }
-    
-    // MARK: - Water Station Summary Card (Screen 2)
-    
-    private var waterStationSummaryCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 5) {
-                Image(systemName: "drop.fill")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Color(red: 0.0, green: 0.48, blue: 1.0))
-                
-                Text("Total time spent at Water Station")
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color(red: 0.0, green: 0.48, blue: 1.0))
-                
-                Spacer()
-            }
-            
-            let stopSecs = Int(appState.pitstopDurationSeconds)
-            let hours = stopSecs / 3600
-            let minutes = (stopSecs % 3600) / 60
-            let seconds = stopSecs % 60
-            let timeStr = String(format: "%02d:%02d:%02d", hours, minutes, seconds)
-            
-            Text(timeStr)
-                .font(.system(size: 32, weight: .bold, design: .rounded))
-                .foregroundStyle(Theme.textPrimary)
-                .monospacedDigit()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(Theme.slateGray)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Theme.cardBorder, lineWidth: 0.8)
-        )
-        .shadow(color: Color.black.opacity(0.03), radius: 5, y: 1.5)
-    }
-    
-    // MARK: - Helpers
-    
-    private func formatMeters(_ meters: Double) -> String {
-        let f = NumberFormatter()
-        f.numberStyle = .decimal
-        f.groupingSeparator = "."
-        f.maximumFractionDigits = 0
-        let str = f.string(from: NSNumber(value: meters)) ?? String(format: "%.0f", meters)
-        return "\(str) m"
-    }
+
     
     // MARK: - Race Start Time Picker Sheet
     

@@ -17,17 +17,17 @@ struct EffortSliderView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Left icon: Tortoise / Mountain (Conservative Effort)
+            // Left icon: Tortoise
             Image(systemName: "tortoise.fill")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Theme.textSecondary.opacity(0.8))
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Color(uiColor: .systemGray))
             
             // Slider Track with Dots & Thumb
             GeometryReader { geo in
                 let trackWidth = geo.size.width
-                let trackHeight: CGFloat = 3
-                let thumbWidth: CGFloat = 26
-                let thumbHeight: CGFloat = 16
+                let trackHeight: CGFloat = 4
+                let thumbWidth: CGFloat = 32
+                let thumbHeight: CGFloat = 20
                 let clampedValue = min(1.0, max(0.0, value))
                 let thumbX = CGFloat(clampedValue) * max(1, trackWidth - thumbWidth)
                 
@@ -39,15 +39,15 @@ struct EffortSliderView: View {
                     
                     // Active Track Fill (Apple Blue)
                     Capsule()
-                        .fill(Color(red: 0.0, green: 0.48, blue: 1.0))
+                        .fill(Theme.waterBlue)
                         .frame(width: max(trackHeight, CGFloat(clampedValue) * trackWidth), height: trackHeight)
                     
                     // Dotted Step Markers Along the Track
                     HStack(spacing: 0) {
                         ForEach(0...stepCount, id: \.self) { step in
                             Circle()
-                                .fill(Double(step) / Double(stepCount) <= clampedValue ? Color.white.opacity(0.85) : Color(uiColor: .systemGray4))
-                                .frame(width: 3, height: 3)
+                                .fill(Double(step) / Double(stepCount) <= clampedValue ? Color.white.opacity(0.9) : Color(uiColor: .systemGray4))
+                                .frame(width: 3.5, height: 3.5)
                             
                             if step < stepCount {
                                 Spacer()
@@ -62,9 +62,9 @@ struct EffortSliderView: View {
                         .frame(width: thumbWidth, height: thumbHeight)
                         .overlay(
                             Capsule()
-                                .stroke(Color.black.opacity(0.08), lineWidth: 0.8)
+                                .stroke(Color.black.opacity(0.06), lineWidth: 0.8)
                         )
-                        .shadow(color: Color.black.opacity(0.12), radius: 3, x: 0, y: 1.5)
+                        .shadow(color: Color.black.opacity(0.14), radius: 4, x: 0, y: 2)
                         .offset(x: thumbX)
                 }
                 .frame(maxHeight: .infinity)
