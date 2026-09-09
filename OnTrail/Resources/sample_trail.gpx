@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="On Trail Strategy Hub" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Mount Rinjani Trail 25K</name>
+    <desc>Challenging alpine trail run with 1,250m elevation gain, technical descents, and scenic ridge cruising.</desc>
+    <time>2026-08-31T06:00:00Z</time>
+  </metadata>
+
+  <!-- Waypoints / Checkpoints -->
+  <wpt lat="-8.391200" lon="116.452100">
+    <ele>800.0</ele>
+    <name>Sembalun Start</name>
+    <desc>Start line at Sembalun basecamp</desc>
+  </wpt>
+  
+  <wpt lat="-8.402500" lon="116.442000">
+    <ele>980.0</ele>
+    <name>Pos 1 Water Station</name>
+    <desc>Hydration and first aid station at KM 5.2</desc>
+  </wpt>
+
+  <wpt lat="-8.413000" lon="116.428000">
+    <ele>1450.0</ele>
+    <name>Pos 2 Aid Station</name>
+    <desc>Major aid station and nutrition checkpoint. COT: 02:45:00</desc>
+  </wpt>
+
+  <wpt lat="-8.419500" lon="116.415000">
+    <ele>2050.0</ele>
+    <name>Plawangan Summit Rim</name>
+    <desc>Crater rim viewpoint and technical descent gateway</desc>
+  </wpt>
+
+  <wpt lat="-8.390800" lon="116.453000">
+    <ele>810.0</ele>
+    <name>Sembalun Finish</name>
+    <desc>Finish line and medal collection</desc>
+  </wpt>
+
+  <trk>
+    <name>Mount Rinjani Trail 25K</name>
+    <trkseg>
+      <!-- Phase 1: Flat/Cruising Section (0.0km - 3.5km, ele 800m - 860m) -->
+      <trkpt lat="-8.391200" lon="116.452100"><ele>800.0</ele><time>2026-08-31T06:00:00Z</time></trkpt>
+      <trkpt lat="-8.392000" lon="116.451000"><ele>802.0</ele><time>2026-08-31T06:02:30Z</time></trkpt>
+      <trkpt lat="-8.393500" lon="116.449500"><ele>806.0</ele><time>2026-08-31T06:05:15Z</time></trkpt>
+      <trkpt lat="-8.395000" lon="116.448000"><ele>812.0</ele><time>2026-08-31T06:08:00Z</time></trkpt>
+      <trkpt lat="-8.396800" lon="116.446500"><ele>822.0</ele><time>2026-08-31T06:11:30Z</time></trkpt>
+      <trkpt lat="-8.398500" lon="116.445200"><ele>835.0</ele><time>2026-08-31T06:15:00Z</time></trkpt>
+      <trkpt lat="-8.400200" lon="116.443800"><ele>850.0</ele><time>2026-08-31T06:18:45Z</time></trkpt>
+      <trkpt lat="-8.402500" lon="116.442000"><ele>870.0</ele><time>2026-08-31T06:23:00Z</time></trkpt>
+
+      <!-- Phase 2: Moderate Climb to Pos 1 (3.5km - 6.0km, ele 870m - 1050m) -->
+      <trkpt lat="-8.404200" lon="116.440200"><ele>910.0</ele><time>2026-08-31T06:28:15Z</time></trkpt>
+      <trkpt lat="-8.406000" lon="116.438500"><ele>955.0</ele><time>2026-08-31T06:33:45Z</time></trkpt>
+      <trkpt lat="-8.407800" lon="116.436800"><ele>1005.0</ele><time>2026-08-31T06:39:30Z</time></trkpt>
+      <trkpt lat="-8.409500" lon="116.435000"><ele>1050.0</ele><time>2026-08-31T06:45:00Z</time></trkpt>
+
+      <!-- Phase 3: Steep Climb to Pos 2 (6.0km - 11.0km, ele 1050m - 1520m) -->
+      <trkpt lat="-8.410500" lon="116.433800"><ele>1120.0</ele><time>2026-08-31T06:52:30Z</time></trkpt>
+      <trkpt lat="-8.411400" lon="116.432500"><ele>1195.0</ele><time>2026-08-31T07:00:45Z</time></trkpt>
+      <trkpt lat="-8.412200" lon="116.431000"><ele>1280.0</ele><time>2026-08-31T07:10:00Z</time></trkpt>
+      <trkpt lat="-8.412800" lon="116.429500"><ele>1365.0</ele><time>2026-08-31T07:19:30Z</time></trkpt>
+      <trkpt lat="-8.413000" lon="116.428000"><ele>1450.0</ele><time>2026-08-31T07:29:15Z</time></trkpt>
+      <trkpt lat="-8.414000" lon="116.426200"><ele>1520.0</ele><time>2026-08-31T07:38:00Z</time></trkpt>
+
+      <!-- Phase 4: Ridge Cruising / Rolling Terrain (11.0km - 14.5km, ele 1520m - 1580m) -->
+      <trkpt lat="-8.415000" lon="116.424500"><ele>1535.0</ele><time>2026-08-31T07:44:30Z</time></trkpt>
+      <trkpt lat="-8.416200" lon="116.422800"><ele>1525.0</ele><time>2026-08-31T07:50:45Z</time></trkpt>
+      <trkpt lat="-8.417200" lon="116.421000"><ele>1548.0</ele><time>2026-08-31T07:57:15Z</time></trkpt>
+      <trkpt lat="-8.418000" lon="116.419000"><ele>1560.0</ele><time>2026-08-31T08:03:30Z</time></trkpt>
+      <trkpt lat="-8.418500" lon="116.417000"><ele>1578.0</ele><time>2026-08-31T08:10:00Z</time></trkpt>
+
+      <!-- Phase 5: Summit Wall Climb (14.5km - 17.5km, ele 1578m - 2050m) -->
+      <trkpt lat="-8.418800" lon="116.416000"><ele>1690.0</ele><time>2026-08-31T08:21:30Z</time></trkpt>
+      <trkpt lat="-8.419100" lon="116.415500"><ele>1810.0</ele><time>2026-08-31T08:34:00Z</time></trkpt>
+      <trkpt lat="-8.419300" lon="116.415200"><ele>1940.0</ele><time>2026-08-31T08:48:15Z</time></trkpt>
+      <trkpt lat="-8.419500" lon="116.415000"><ele>2050.0</ele><time>2026-08-31T09:02:00Z</time></trkpt>
+
+      <!-- Phase 6: Steep Technical Descent (17.5km - 21.0km, ele 2050m - 1280m) -->
+      <trkpt lat="-8.418000" lon="116.416800"><ele>1880.0</ele><time>2026-08-31T09:12:30Z</time></trkpt>
+      <trkpt lat="-8.416500" lon="116.419500"><ele>1710.0</ele><time>2026-08-31T09:21:45Z</time></trkpt>
+      <trkpt lat="-8.414800" lon="116.422500"><ele>1540.0</ele><time>2026-08-31T09:30:15Z</time></trkpt>
+      <trkpt lat="-8.413000" lon="116.426000"><ele>1390.0</ele><time>2026-08-31T09:38:00Z</time></trkpt>
+      <trkpt lat="-8.411000" lon="116.430000"><ele>1280.0</ele><time>2026-08-31T09:45:30Z</time></trkpt>
+
+      <!-- Phase 7: Fast Descent & Flat Finish (21.0km - 25.0km, ele 1280m - 810m) -->
+      <trkpt lat="-8.408000" lon="116.434500"><ele>1150.0</ele><time>2026-08-31T09:53:00Z</time></trkpt>
+      <trkpt lat="-8.405000" lon="116.438500"><ele>1020.0</ele><time>2026-08-31T10:00:15Z</time></trkpt>
+      <trkpt lat="-8.401500" lon="116.442500"><ele>920.0</ele><time>2026-08-31T10:07:00Z</time></trkpt>
+      <trkpt lat="-8.397500" lon="116.446500"><ele>850.0</ele><time>2026-08-31T10:13:30Z</time></trkpt>
+      <trkpt lat="-8.394000" lon="116.450000"><ele>820.0</ele><time>2026-08-31T10:19:15Z</time></trkpt>
+      <trkpt lat="-8.390800" lon="116.453000"><ele>810.0</ele><time>2026-08-31T10:24:00Z</time></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
