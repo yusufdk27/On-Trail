@@ -66,7 +66,7 @@ struct GoalFinishCardView: View {
                         .font(Theme.trailSubmetricLabel)
                         .foregroundStyle(Color.secondary)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .center)
                 
                 // Elevation
                 VStack(alignment: .trailing, spacing: 3) {

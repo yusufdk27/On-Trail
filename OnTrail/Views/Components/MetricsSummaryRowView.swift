@@ -45,7 +45,7 @@ struct MetricsSummaryRowView: View {
                         .font(Theme.trailMetricValue)
                         .foregroundStyle(Theme.textPrimary)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .center)
                 
                 // 3. Elevation
                 VStack(alignment: .trailing, spacing: 3) {
@@ -91,7 +91,7 @@ struct MetricsSummaryRowView: View {
                             .foregroundStyle(Theme.textPrimary)
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .center)
                 
                 // 3. Total Descent
                 VStack(alignment: .trailing, spacing: 3) {

@@ -48,6 +48,15 @@ struct CourseVisualizerView: View {
         return "Start - End"
     }
     
+    private var segmentSubtitle: String {
+        if let seg = currentSegment {
+            let startKm = seg.startDistance / 1000.0
+            let endKm = seg.endDistance / 1000.0
+            return String(format: "%.1f km – %.1f km • %@", startKm, endKm, seg.phase.displayName)
+        }
+        return "Course Overview"
+    }
+    
     var body: some View {
         NavigationStack {
             CourseMapView(
@@ -166,9 +175,15 @@ struct CourseVisualizerView: View {
                 if currentSegment == nil {
                     // SCREEN 2 (Start - End): Goal Finish + Water Station + Course Strategy
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Goal Finish")
-                            .font(Theme.trailSectionHeading)
-                            .foregroundStyle(Theme.textPrimary)
+                        HStack(spacing: 6) {
+                            Text("Goal Finish")
+                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .foregroundStyle(Theme.textPrimary)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(Color.secondary.opacity(0.6))
+                            Spacer()
+                        }
                         
                         GoalFinishCardView(
                             strategy: strategy,
@@ -230,87 +245,82 @@ struct CourseVisualizerView: View {
         }
     }
     
-    // MARK: - Segment Switcher Header (Responsive between Screen 1 vs 2, 3, 4)
+    // MARK: - Segment Switcher Header (Apple Maps Native Header Style)
     
     private var segmentSwitcherHeader: some View {
         Group {
             if selectedSegmentIndex == -1 && sheetDetent == .fraction(0.40) {
                 // Screen 1: Preview GPX (Collapsed)
-                // Left: "Start - End" title
-                // Right: `<` and `>` buttons grouped together
-                HStack {
-                    Text(segmentTitle)
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.textPrimary)
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(segmentTitle)
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.textPrimary)
+                        
+                        Text(segmentSubtitle)
+                            .font(.system(size: 13, weight: .medium, design: .default))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
                     
                     Spacer()
                     
-                    HStack(spacing: 6) {
-                        Button {
+                    HStack(spacing: 8) {
+                        circularHeaderButton(systemName: "chevron.left") {
                             navigateSegment(delta: -1)
-                        } label: {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(Theme.textPrimary)
-                                .frame(width: 28, height: 28)
-                                .background(Color(uiColor: .systemGray6), in: Circle())
-                                .overlay(Circle().stroke(Color.black.opacity(0.06), lineWidth: 0.8))
                         }
-                        .buttonStyle(.plain)
                         
-                        Button {
+                        circularHeaderButton(systemName: "chevron.right") {
                             navigateSegment(delta: 1)
-                        } label: {
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(Theme.textPrimary)
-                                .frame(width: 28, height: 28)
-                                .background(Color(uiColor: .systemGray6), in: Circle())
-                                .overlay(Circle().stroke(Color.black.opacity(0.06), lineWidth: 0.8))
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             } else {
                 // Screens 2, 3, 4:
-                // Left: `<` button
-                // Center: Title
-                // Right: `>` button
-                HStack {
-                    Button {
+                HStack(alignment: .center) {
+                    circularHeaderButton(systemName: "chevron.left") {
                         navigateSegment(delta: -1)
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(Theme.textPrimary)
-                            .frame(width: 28, height: 28)
-                            .background(Color(uiColor: .systemGray6), in: Circle())
-                            .overlay(Circle().stroke(Color.black.opacity(0.06), lineWidth: 0.8))
                     }
-                    .buttonStyle(.plain)
                     
                     Spacer()
                     
-                    Text(segmentTitle)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.textPrimary)
+                    VStack(spacing: 2) {
+                        Text(segmentTitle)
+                            .font(.system(size: 19, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.textPrimary)
+                        
+                        Text(segmentSubtitle)
+                            .font(.system(size: 12, weight: .medium, design: .default))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
                     
                     Spacer()
                     
-                    Button {
+                    circularHeaderButton(systemName: "chevron.right") {
                         navigateSegment(delta: 1)
-                    } label: {
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(Theme.textPrimary)
-                            .frame(width: 28, height: 28)
-                            .background(Color(uiColor: .systemGray6), in: Circle())
-                            .overlay(Circle().stroke(Color.black.opacity(0.06), lineWidth: 0.8))
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
+        .padding(.vertical, 2)
+    }
+    
+    private func circularHeaderButton(systemName: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(Theme.textPrimary)
+                .frame(width: 36, height: 36)
+                .background(
+                    Circle()
+                        .fill(Color(uiColor: .systemGray5).opacity(0.85))
+                )
+                .overlay(
+                    Circle()
+                        .stroke(Theme.cardBorder, lineWidth: 0.8)
+                )
+                .shadow(color: Color.black.opacity(0.04), radius: 4, y: 1.5)
+        }
+        .buttonStyle(.plain)
     }
     
     private func navigateSegment(delta: Int) {

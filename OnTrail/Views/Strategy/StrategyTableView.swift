@@ -18,10 +18,16 @@ struct StrategyTableView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Section Header
-            Text("Strategy")
-                .font(Theme.trailSectionHeading)
-                .foregroundStyle(Theme.textPrimary)
+            // Section Header (Apple Fitness style)
+            HStack(spacing: 6) {
+                Text("Strategy")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(Theme.textPrimary)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color.secondary.opacity(0.6))
+                Spacer()
+            }
             
             // Table Container Card
             VStack(spacing: 0) {
