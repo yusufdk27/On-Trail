@@ -7,100 +7,93 @@
 
 import SwiftUI
 
-/// Apple Native styled continuous effort slider.
-/// Gradient: Activity Green (Konservatif) → Sun Yellow (Moderate) → Flame Orange → Crimson (Challenging).
+/// Effort Slider matching Screen 2 of the native design:
+/// Flanked by Tortoise (easy) and Hare (challenging) icons, with a dotted step track,
+/// Apple-blue active progress fill, and a white circular thumb knob.
 struct EffortSliderView: View {
     @Binding var value: Double // 0.0 ... 1.0
     
+    private let stepCount = 10
+    
     var body: some View {
-        VStack(spacing: 8) {
+        HStack(spacing: 12) {
+            // Left icon: Tortoise / Mountain (Conservative Effort)
+            Image(systemName: "tortoise.fill")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Theme.textSecondary.opacity(0.8))
+            
+            // Slider Track with Dots & Thumb
             GeometryReader { geo in
                 let trackWidth = geo.size.width
-                let trackHeight: CGFloat = 14
-                let thumbWidth: CGFloat = 16
-                let thumbHeight: CGFloat = 26
+                let trackHeight: CGFloat = 3
+                let thumbWidth: CGFloat = 26
+                let thumbHeight: CGFloat = 16
+                let clampedValue = min(1.0, max(0.0, value))
+                let thumbX = CGFloat(clampedValue) * max(1, trackWidth - thumbWidth)
                 
                 ZStack(alignment: .leading) {
-                    // Continuous Apple Fitness Activity Gradient Track
-                    RoundedRectangle(cornerRadius: trackHeight / 2, style: .continuous)
-                        .fill(Theme.effortGradient)
+                    // Base Inactive Track (Gray Line)
+                    Capsule()
+                        .fill(Color(uiColor: .systemGray5))
                         .frame(height: trackHeight)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: trackHeight / 2, style: .continuous)
-                                .stroke(Color.white.opacity(0.12), lineWidth: 0.8)
-                        )
                     
-                    // Subtle tick marks
-                    HStack {
-                        ForEach(0..<7) { _ in
-                            Spacer()
-                            Rectangle()
-                                .fill(Color.black.opacity(0.3))
-                                .frame(width: 1, height: 6)
+                    // Active Track Fill (Apple Blue)
+                    Capsule()
+                        .fill(Color(red: 0.0, green: 0.48, blue: 1.0))
+                        .frame(width: max(trackHeight, CGFloat(clampedValue) * trackWidth), height: trackHeight)
+                    
+                    // Dotted Step Markers Along the Track
+                    HStack(spacing: 0) {
+                        ForEach(0...stepCount, id: \.self) { step in
+                            Circle()
+                                .fill(Double(step) / Double(stepCount) <= clampedValue ? Color.white.opacity(0.85) : Color(uiColor: .systemGray4))
+                                .frame(width: 3, height: 3)
+                            
+                            if step < stepCount {
+                                Spacer()
+                            }
                         }
-                        Spacer()
                     }
                     .frame(height: trackHeight)
                     
-                    // Draggable Apple-style Thumb Indicator
-                    let thumbX = CGFloat(value) * max(1, trackWidth - thumbWidth)
-                    
-                    ZStack {
-                        // Outer thumb capsule
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(Color(white: 0.16))
-                            .frame(width: thumbWidth, height: thumbHeight)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .stroke(Color.white, lineWidth: 2)
-                            )
-                            .shadow(color: Color.black.opacity(0.6), radius: 4, y: 2)
-                        
-                        // Center indicator line
-                        Capsule()
-                            .fill(Color.white)
-                            .frame(width: 2, height: 12)
-                    }
-                    .offset(x: thumbX)
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { gesture in
-                                let clampedX = min(max(0, gesture.location.x), trackWidth)
-                                let fraction = Double(clampedX / max(1, trackWidth))
-                                value = min(1.0, max(0.0, fraction))
-                            }
-                    )
+                    // Draggable White Capsule Thumb Knob
+                    Capsule()
+                        .fill(Color.white)
+                        .frame(width: thumbWidth, height: thumbHeight)
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.black.opacity(0.08), lineWidth: 0.8)
+                        )
+                        .shadow(color: Color.black.opacity(0.12), radius: 3, x: 0, y: 1.5)
+                        .offset(x: thumbX)
                 }
-                .frame(height: thumbHeight)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { gesture in
+                            let fraction = gesture.location.x / max(1, trackWidth)
+                            let raw = min(1.0, max(0.0, Double(fraction)))
+                            // Smoothly snap or smoothly update value
+                            value = (raw * 100).rounded() / 100.0
+                        }
+                )
             }
-            .frame(height: 26)
+            .frame(height: 24)
             
-            // Labels below slider matching Apple Fitness standards & reference
-            HStack {
-                Text("Light")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.secondary)
-                
-                Spacer()
-                
-                Text("Target GAP")
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundStyle(Theme.neonOrange)
-                
-                Spacer()
-                
-                Text("Challenging")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.secondary)
-            }
+            // Right icon: Hare / Cheetah (Race Effort)
+            Image(systemName: "hare.fill")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Theme.textSecondary.opacity(0.8))
         }
+        .padding(.vertical, 4)
     }
 }
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
-        EffortSliderView(value: .constant(0.5))
+        Color.white.ignoresSafeArea()
+        EffortSliderView(value: .constant(0.4))
             .padding()
     }
 }

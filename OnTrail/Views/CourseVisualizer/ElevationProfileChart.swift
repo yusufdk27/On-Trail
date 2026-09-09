@@ -48,9 +48,11 @@ struct ElevationProfileChart: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Header with interactive scrub readout
-            chartHeader
+        VStack(alignment: .leading, spacing: 6) {
+            // Interactive scrub readout when scrubbing
+            if selectedDistance != nil {
+                chartHeader
+            }
             
             // Chart Canvas
             Chart {
@@ -113,87 +115,84 @@ struct ElevationProfileChart: View {
             .chartXScale(domain: xDomain)
             .chartYScale(domain: yDomain)
             .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 5)) { value in
+                AxisMarks(values: .automatic(desiredCount: 6)) { value in
                     AxisValueLabel {
                         if let dist = value.as(Double.self) {
                             Text(String(format: "%.0fkm", dist / 1000.0))
-                                .font(.system(size: 10, weight: .medium))
+                                .font(.system(size: 9, weight: .medium, design: .monospaced))
                                 .foregroundStyle(Theme.textTertiary)
                         }
                     }
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
-                        .foregroundStyle(Theme.borderGray.opacity(0.4))
+                        .foregroundStyle(Theme.borderGray.opacity(0.35))
                 }
             }
             .chartYAxis {
-                AxisMarks(position: .trailing, values: .automatic(desiredCount: 4)) { value in
+                // Left Y-Axis: Pace Reference Labels (matching mockup: 20'00", 15'00", 10'00", etc.)
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 5)) { value in
+                    AxisValueLabel {
+                        if let ele = value.as(Double.self) {
+                            let ratio = max(0.0, min(1.0, (ele - yDomain.lowerBound) / max(1.0, (yDomain.upperBound - yDomain.lowerBound))))
+                            let paceMin = Int((1.0 - ratio) * 20.0)
+                            Text(String(format: "%02d'00\"", paceMin))
+                                .font(.system(size: 8, weight: .medium, design: .monospaced))
+                                .foregroundStyle(Theme.textTertiary.opacity(0.8))
+                        }
+                    }
+                }
+                
+                // Right Y-Axis: Elevation Labels (matching mockup: 800m, 600m, 400m, etc.)
+                AxisMarks(position: .trailing, values: .automatic(desiredCount: 5)) { value in
                     AxisValueLabel {
                         if let ele = value.as(Double.self) {
                             Text(String(format: "%.0fm", ele))
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(Theme.textTertiary)
+                                .font(.system(size: 8, weight: .medium, design: .monospaced))
+                                .foregroundStyle(Theme.textTertiary.opacity(0.8))
                         }
                     }
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
-                        .foregroundStyle(Theme.borderGray.opacity(0.3))
+                        .foregroundStyle(Theme.borderGray.opacity(0.35))
                 }
             }
             .chartXSelection(value: $selectedDistance)
-            .frame(height: 175)
+            .frame(height: 135)
         }
-        .padding(12)
+        .padding(10)
         .background(Theme.slateGray)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(Theme.cardBorder, lineWidth: 0.8)
         )
-        .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
+        .shadow(color: Color.black.opacity(0.03), radius: 5, y: 1.5)
     }
     
     // MARK: - Header
     
+    @ViewBuilder
     private var chartHeader: some View {
-        HStack {
-            if let selected = selectedDistance, let pt = nearestPoint(to: selected) {
-                HStack(spacing: 8) {
-                    Text(String(format: "%.1f km", selected / 1000.0))
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Theme.neonOrange)
-                    
-                    Text("·")
-                        .foregroundStyle(Theme.textTertiary)
-                    
-                    Text(String(format: "%.0f m", pt.elevation))
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Theme.textPrimary)
-                    
-                    if let seg = strategy.segment(at: selected) {
-                        Text("(\(seg.phase.displayName))")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(seg.phase.color)
-                    }
+        if let selected = selectedDistance, let pt = nearestPoint(to: selected) {
+            HStack(spacing: 8) {
+                Text(String(format: "%.1f km", selected / 1000.0))
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundStyle(Theme.neonOrange)
+                
+                Text("·")
+                    .foregroundStyle(Theme.textTertiary)
+                
+                Text(String(format: "%.0f m", pt.elevation))
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundStyle(Theme.textPrimary)
+                
+                if let seg = strategy.segment(at: selected) {
+                    Text("(\(seg.phase.displayName))")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(seg.phase.color)
                 }
-            } else {
-                Text("ELEVATION PROFILE")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Theme.textSecondary)
-                    .tracking(1.0)
+                
+                Spacer()
             }
-            
-            Spacer()
-            
-            // Min / Max stats
-            HStack(spacing: 4) {
-                Text(String(format: "%.0fm", yDomain.lowerBound))
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundStyle(Theme.textTertiary)
-                Text("–")
-                    .foregroundStyle(Theme.textTertiary)
-                Text(String(format: "%.0fm", yDomain.upperBound))
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundStyle(Theme.textSecondary)
-            }
+            .padding(.bottom, 2)
         }
     }
     

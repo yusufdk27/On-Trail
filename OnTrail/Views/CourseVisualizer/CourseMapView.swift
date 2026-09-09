@@ -15,6 +15,7 @@ struct CourseMapView: View {
     let strategy: RaceStrategy
     var selectedDistance: Double? = nil
     var isFullScreen: Bool = true
+    var isSheetExpanded: Bool = false
     var onCheckpointTapped: ((Checkpoint) -> Void)? = nil
     
     @State private var mapPosition: MapCameraPosition = .automatic
@@ -123,42 +124,6 @@ struct CourseMapView: View {
                 .frame(width: geo.size.width, height: geo.size.height)
                 .ignoresSafeArea()
                 
-                // Apple Maps Native Floating Controls (Vertical Capsule positioned directly ABOVE sheet)
-                VStack(spacing: 16) {
-                    // Toggle Map Layers (Satellite vs Standard)
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            isSatellite.toggle()
-                        }
-                    } label: {
-                        Image(systemName: "map.fill")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundStyle(isSatellite ? Theme.neonOrange : Color.primary)
-                            .frame(width: 44, height: 38)
-                    }
-                    
-                    // Re-center Camera on Course
-                    Button {
-                        withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
-                            mapPosition = .automatic
-                        }
-                    } label: {
-                        Image(systemName: "location.fill")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundStyle(Color.primary)
-                            .frame(width: 44, height: 38)
-                    }
-                }
-                .padding(.vertical, 8)
-                .background(.ultraThinMaterial, in: Capsule())
-                .overlay(
-                    Capsule()
-                        .stroke(Theme.cardBorder, lineWidth: 0.8)
-                )
-                .clipShape(Capsule())
-                .shadow(color: Color.black.opacity(0.18), radius: 10, y: 2)
-                .padding(.trailing, 16)
-                .padding(.bottom, bottomOffset)
             }
         }
     }

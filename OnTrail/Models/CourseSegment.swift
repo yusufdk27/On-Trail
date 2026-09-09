@@ -150,4 +150,90 @@ struct CourseSegment: Identifiable, Codable {
         let grad = String(format: "%.1f", averageGradient)
         return "\(phase.displayName) · \(dist) km · \(elev)m · \(grad)%"
     }
+    
+    /// Generates splits (e.g. 1,000m intervals) for detailed inspection in Screen 4.
+    func splits(intervalMeters: Double = 1000, effortFactor: Double = 1.0) -> [SegmentSplit] {
+        guard !trackPoints.isEmpty, distance > 0 else { return [] }
+        
+        var result: [SegmentSplit] = []
+        var currentStartM = startDistance
+        var splitIdx = 1
+        
+        while currentStartM < endDistance {
+            let currentEndM = min(currentStartM + intervalMeters, endDistance)
+            let segPts = trackPoints.filter { $0.distanceFromStart >= currentStartM && $0.distanceFromStart <= currentEndM }
+            let splitDist = currentEndM - currentStartM
+            
+            let startEle = segPts.first?.elevation ?? (trackPoints.first?.elevation ?? 0)
+            let endEle = segPts.last?.elevation ?? (trackPoints.last?.elevation ?? 0)
+            let elevChange = endEle - startEle
+            
+            // Determine phase of this split based on gradient
+            let splitGrad = splitDist > 0 ? (elevChange / splitDist) * 100 : 0
+            let splitPhase: SegmentPhase
+            if splitGrad > 3.0 {
+                splitPhase = .climb
+            } else if splitGrad < -3.0 {
+                splitPhase = .descent
+            } else {
+                splitPhase = .flat
+            }
+            
+            let adjustedPace = targetPaceSecondsPerKm * effortFactor
+            
+            result.append(
+                SegmentSplit(
+                    id: UUID(),
+                    splitIndex: splitIdx,
+                    phase: splitPhase,
+                    distanceMeters: splitDist,
+                    elevationChangeMeters: elevChange,
+                    paceSecondsPerKm: adjustedPace
+                )
+            )
+            
+            currentStartM = currentEndM
+            splitIdx += 1
+            if currentStartM >= endDistance - 50 { break }
+        }
+        
+        return result.isEmpty ? [
+            SegmentSplit(
+                id: UUID(),
+                splitIndex: 1,
+                phase: phase,
+                distanceMeters: distance,
+                elevationChangeMeters: endElevation - startElevation,
+                paceSecondsPerKm: targetPaceSecondsPerKm * effortFactor
+            )
+        ] : result
+    }
 }
+
+/// Represents a sub-kilometer or fixed interval split within a course segment.
+struct SegmentSplit: Identifiable, Codable {
+    let id: UUID
+    let splitIndex: Int
+    let phase: SegmentPhase
+    let distanceMeters: Double
+    let elevationChangeMeters: Double
+    let paceSecondsPerKm: Double
+    
+    var distanceFormatted: String {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.groupingSeparator = "."
+        f.maximumFractionDigits = 0
+        let str = f.string(from: NSNumber(value: distanceMeters)) ?? String(format: "%.0f", distanceMeters)
+        return "\(str) m"
+    }
+    
+    var paceFormatted: String {
+        PacingZone.formatPace(paceSecondsPerKm, showUnit: false) + " /km"
+    }
+    
+    var elevationFormatted: String {
+        String(format: "%.0f m", abs(elevationChangeMeters))
+    }
+}
+

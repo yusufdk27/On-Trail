@@ -9,8 +9,11 @@ import SwiftUI
 import MapKit
 
 /// Interactive Course Visualizer & Strategy Builder with Apple Maps Style Bottom Sheet.
-/// Matches Gambar 1 (Compact / Peek State ~38% height with full map behind) and
-/// Gambar 2 (Expanded State ~88% height with full momentum scrolling).
+/// Implements the 4-screen design flow:
+/// 1. Preview GPX (Screen 1): Full map, floating frosted navbar, collapsed sheet with "Start - End" & `< >`.
+/// 2. Detail (Screen 2): Expanded sheet with Goal Finish card, dotted blue Effort Slider, Water Station card, and Strategy table.
+/// 3. Detail Strategy (Screen 3): Collapsed sheet for active segment (e.g. `Segment 1: Climb`).
+/// 4. Detail detailnya strategy (Screen 4): Expanded sheet for active segment with sub-splits table.
 struct CourseVisualizerView: View {
     let strategy: RaceStrategy
     @Environment(AppState.self) private var appState
@@ -40,50 +43,9 @@ struct CourseVisualizerView: View {
     
     private var segmentTitle: String {
         if let seg = currentSegment {
-            return "Seg \(seg.segmentIndex + 1): \(seg.phase.displayName)"
+            return "Segment \(seg.segmentIndex + 1): \(seg.phase.displayName)"
         }
         return "Start - End"
-    }
-    
-    private var displayDistanceKm: Double {
-        if let seg = currentSegment {
-            return seg.distanceKm
-        }
-        return strategy.totalDistanceKm
-    }
-    
-    private var displayAscentMeters: Double {
-        if let seg = currentSegment {
-            return seg.elevationGain
-        }
-        return strategy.totalElevationGain
-    }
-    
-    private var displayDescentMeters: Double {
-        if let seg = currentSegment {
-            return seg.elevationLoss
-        }
-        return strategy.totalElevationLoss
-    }
-    
-    private var effortBadgeText: String {
-        if appState.effortSliderValue < 0.35 {
-            return "Konservatif"
-        } else if appState.effortSliderValue > 0.65 {
-            return "Race Pace"
-        } else {
-            return "Target GAP"
-        }
-    }
-    
-    private var effortBadgeColor: Color {
-        if appState.effortSliderValue < 0.35 {
-            return Theme.successGreen
-        } else if appState.effortSliderValue > 0.65 {
-            return Theme.neonOrange
-        } else {
-            return Theme.warningYellow
-        }
     }
     
     var body: some View {
@@ -92,25 +54,44 @@ struct CourseVisualizerView: View {
                 strategy: strategy,
                 selectedDistance: selectedDistance,
                 isFullScreen: true,
+                isSheetExpanded: sheetDetent == .large,
                 onCheckpointTapped: { checkpoint in
                     appState.selectedCheckpoint = checkpoint
                     appState.showingCheckpointEditor = true
                 }
             )
             .ignoresSafeArea()
-            .navigationTitle(strategy.courseName)
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
+                // Leading: Circular Frosted Glass Back Button
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         appState.clearCurrentCourse()
                     } label: {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .bold))
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(Theme.textPrimary)
+                            .frame(width: 36, height: 36)
+                            .background(.ultraThinMaterial, in: Circle())
+                            .overlay(Circle().stroke(Theme.cardBorder, lineWidth: 0.8))
+                            .shadow(color: Color.black.opacity(0.12), radius: 6, y: 2)
                     }
                 }
                 
+                // Center: Floating Frosted Capsule Course Name Pill
+                ToolbarItem(placement: .principal) {
+                    Text(strategy.courseName)
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .overlay(Capsule().stroke(Theme.cardBorder, lineWidth: 0.8))
+                        .shadow(color: Color.black.opacity(0.12), radius: 6, y: 2)
+                }
+                
+                // Trailing: Blue Capsule Save Button
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         withAnimation {
@@ -123,20 +104,32 @@ struct CourseVisualizerView: View {
                             }
                         }
                     }
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.capsule)
                     .controlSize(.small)
                     .tint(Color.blue)
+                    .shadow(color: Color.blue.opacity(0.3), radius: 6, y: 2)
                 }
             }
-            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .sheet(isPresented: .constant(true)) {
                 sheetContentView
                     .presentationDetents([.fraction(0.40), .large], selection: $sheetDetent)
                     .presentationDragIndicator(.visible)
                     .presentationBackgroundInteraction(.enabled(upThrough: .fraction(0.40)))
                     .interactiveDismissDisabled()
-                    .presentationBackground(.regularMaterial)
+                    .presentationBackground {
+                        Group {
+                            if sheetDetent == .large {
+                                Theme.background
+                            } else {
+                                Rectangle()
+                                    .fill(.ultraThinMaterial)
+                            }
+                        }
+                        .animation(.easeInOut(duration: 0.28), value: sheetDetent)
+                    }
             }
             .overlay(alignment: .top) {
                 if isSavedFeedback {
@@ -156,7 +149,7 @@ struct CourseVisualizerView: View {
                 // Segment Switcher Header (< Start - End >)
                 segmentSwitcherHeader
                 
-                // Summary Metrics Row: Distance, Total Ascent, Total Descent
+                // Summary Metrics Row: Distance, Total Ascent / Pace, Total Descent / Elevation
                 metricsSummaryRow
                 
                 // Swift Charts Elevation Profile (Lime-Green Gradient)
@@ -166,25 +159,33 @@ struct CourseVisualizerView: View {
                     selectedDistance: $selectedDistance
                 )
                 
-                // Goal Finish Section
-                goalFinishSection
-                
-                // 3-Phase Energy Pacing Breakdown
-                EnergyStrategyPhasesView(
-                    strategy: strategy,
-                    effortFactor: appState.effortFactor
-                )
-                
-                // Water Stations & Checkpoints Strategy (COROS-Style Per-Station Rest & Leg Splits)
-                if !strategy.checkpoints.isEmpty {
-                    WaterStationsStrategySectionView(strategy: strategy)
+                if currentSegment == nil {
+                    // SCREEN 2 (Start - End): Goal Finish + Water Station + Course Strategy
+                    goalFinishSection
+                    
+                    waterStationSummaryCard
+                    
+                    StrategyTableView(
+                        strategy: strategy,
+                        focusedSegment: nil,
+                        effortFactor: appState.effortFactor,
+                        onSelectSegment: { index in
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                selectedSegmentIndex = index
+                            }
+                        }
+                    )
+                } else {
+                    // SCREENS 3 & 4 (Segment X: Phase): Segment Splits Strategy
+                    StrategyTableView(
+                        strategy: strategy,
+                        focusedSegment: currentSegment,
+                        effortFactor: appState.effortFactor
+                    )
                 }
                 
-                // Sync to Watch CTA Button
-                watchSyncButton
-                
                 Spacer()
-                    .frame(height: 50)
+                    .frame(height: 24)
             }
             .padding(.horizontal, 16)
             .padding(.top, 12)
@@ -209,348 +210,344 @@ struct CourseVisualizerView: View {
         }
     }
     
-    // MARK: - Native Segment Switcher Carousel
+    // MARK: - Segment Switcher Header (Responsive between Screen 1 vs 2, 3, 4)
     
     private var segmentSwitcherHeader: some View {
-        HStack {
-            Button {
-                withAnimation(.easeInOut(duration: 0.22)) {
-                    if selectedSegmentIndex == -1 {
-                        selectedSegmentIndex = strategy.segments.count - 1
-                    } else if selectedSegmentIndex == 0 {
-                        selectedSegmentIndex = -1
-                    } else {
-                        selectedSegmentIndex -= 1
+        Group {
+            if selectedSegmentIndex == -1 && sheetDetent == .fraction(0.40) {
+                // Screen 1: Preview GPX (Collapsed)
+                // Left: "Start - End" title
+                // Right: `<` and `>` buttons grouped together
+                HStack {
+                    Text(segmentTitle)
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.textPrimary)
+                    
+                    Spacer()
+                    
+                    HStack(spacing: 6) {
+                        Button {
+                            navigateSegment(delta: -1)
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Theme.textPrimary)
+                                .frame(width: 28, height: 28)
+                                .background(Color(uiColor: .systemGray6), in: Circle())
+                                .overlay(Circle().stroke(Color.black.opacity(0.06), lineWidth: 0.8))
+                        }
+                        .buttonStyle(.plain)
+                        
+                        Button {
+                            navigateSegment(delta: 1)
+                        } label: {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Theme.textPrimary)
+                                .frame(width: 28, height: 28)
+                                .background(Color(uiColor: .systemGray6), in: Circle())
+                                .overlay(Circle().stroke(Color.black.opacity(0.06), lineWidth: 0.8))
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 13, weight: .semibold))
-            }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.circle)
-            .controlSize(.small)
-            .tint(Color.secondary)
-            
-            Spacer()
-            
-            Text(segmentTitle)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
-                .foregroundStyle(Theme.textPrimary)
-            
-            Spacer()
-            
-            Button {
-                withAnimation(.easeInOut(duration: 0.22)) {
-                    if selectedSegmentIndex >= strategy.segments.count - 1 {
-                        selectedSegmentIndex = -1
-                    } else {
-                        selectedSegmentIndex += 1
+            } else {
+                // Screens 2, 3, 4:
+                // Left: `<` button
+                // Center: Title
+                // Right: `>` button
+                HStack {
+                    Button {
+                        navigateSegment(delta: -1)
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Theme.textPrimary)
+                            .frame(width: 28, height: 28)
+                            .background(Color(uiColor: .systemGray6), in: Circle())
+                            .overlay(Circle().stroke(Color.black.opacity(0.06), lineWidth: 0.8))
                     }
+                    .buttonStyle(.plain)
+                    
+                    Spacer()
+                    
+                    Text(segmentTitle)
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.textPrimary)
+                    
+                    Spacer()
+                    
+                    Button {
+                        navigateSegment(delta: 1)
+                    } label: {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Theme.textPrimary)
+                            .frame(width: 28, height: 28)
+                            .background(Color(uiColor: .systemGray6), in: Circle())
+                            .overlay(Circle().stroke(Color.black.opacity(0.06), lineWidth: 0.8))
+                    }
+                    .buttonStyle(.plain)
                 }
-            } label: {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
             }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.circle)
-            .controlSize(.small)
-            .tint(Color.secondary)
         }
     }
     
-    // MARK: - Metrics Summary Row (Distance, Ascent, Descent)
+    private func navigateSegment(delta: Int) {
+        withAnimation(.easeInOut(duration: 0.22)) {
+            if delta > 0 {
+                if selectedSegmentIndex >= strategy.segments.count - 1 {
+                    selectedSegmentIndex = -1
+                } else {
+                    selectedSegmentIndex += 1
+                }
+            } else {
+                if selectedSegmentIndex <= -1 {
+                    selectedSegmentIndex = strategy.segments.count - 1
+                } else if selectedSegmentIndex == 0 {
+                    selectedSegmentIndex = -1
+                } else {
+                    selectedSegmentIndex -= 1
+                }
+            }
+        }
+    }
+    
+    // MARK: - Metrics Summary Row
     
     private var metricsSummaryRow: some View {
         HStack(spacing: 0) {
-            // Distance
-            VStack(alignment: .leading, spacing: 3) {
-                Text("DISTANCE")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Color.secondary)
-                    .tracking(0.5)
+            if let seg = currentSegment {
+                // Segment-Specific Metrics (Screens 3 & 4)
+                // Distance
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Distance")
+                        .font(.system(size: 10, weight: .regular))
+                        .foregroundStyle(Color.secondary)
+                    
+                    HStack(spacing: 4) {
+                        Text("/\\")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text(formatMeters(seg.distance))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.textPrimary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
-                HStack(spacing: 4) {
-                    Image(systemName: "figure.run")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Theme.neonOrange)
-                    Text(String(format: "%.2f km", displayDistanceKm))
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                // Average Pace
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Average Pace")
+                        .font(.system(size: 10, weight: .regular))
+                        .foregroundStyle(Color.secondary)
+                    
+                    let adjPace = seg.targetPaceSecondsPerKm * appState.effortFactor
+                    Text(PacingZone.formatPace(adjPace, showUnit: false) + " /km")
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
                         .foregroundStyle(Theme.textPrimary)
                 }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            
-            // Total Ascent
-            VStack(alignment: .leading, spacing: 3) {
-                Text("TOTAL ASCENT")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Color.secondary)
-                    .tracking(0.5)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(SegmentPhase.climb.color)
-                    Text(String(format: "+%.0f m", displayAscentMeters))
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                // Elevation
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("Elevation")
+                        .font(.system(size: 10, weight: .regular))
+                        .foregroundStyle(Color.secondary)
+                    
+                    let elevM = seg.phase == .climb ? seg.elevationGain : (seg.phase == .descent ? seg.elevationLoss : seg.elevationGain)
+                    Text(String(format: "%.0f m", elevM))
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
                         .foregroundStyle(Theme.textPrimary)
                 }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            
-            // Total Descent
-            VStack(alignment: .leading, spacing: 3) {
-                Text("TOTAL DESCENT")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Color.secondary)
-                    .tracking(0.5)
-                
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.down.right")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(SegmentPhase.descent.color)
-                    Text(String(format: "-%.0f m", displayDescentMeters))
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            } else {
+                // Course Overview Metrics (Screens 1 & 2)
+                // Distance
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Distance")
+                        .font(.system(size: 10, weight: .regular))
+                        .foregroundStyle(Color.secondary)
+                    
+                    HStack(spacing: 4) {
+                        Text("/\\")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text(String(format: "%.2f km", strategy.totalDistanceKm))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.textPrimary)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // Total Ascent
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Total Ascent")
+                        .font(.system(size: 10, weight: .regular))
+                        .foregroundStyle(Color.secondary)
+                    
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text(String(format: "%.0f m", strategy.totalElevationGain))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.textPrimary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // Total Descent
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("Total Descent")
+                        .font(.system(size: 10, weight: .regular))
+                        .foregroundStyle(Color.secondary)
+                    
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.down.right")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text(String(format: "%.0f m", strategy.totalElevationLoss))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.textPrimary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
     
-    // MARK: - Goal Finish Section (Apple Health / Fitness Native Style)
+    // MARK: - Goal Finish Section (Screen 2)
     
     private var goalFinishSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            // Header Row with Apple Activity Badge
-            HStack(alignment: .center) {
-                HStack(spacing: 6) {
-                    Image(systemName: "flag.checkered.2.crossed")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(Theme.neonOrange)
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Goal Finish")
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(Theme.textPrimary)
+            
+            VStack(alignment: .leading, spacing: 10) {
+                // Target Time Badge
+                HStack(spacing: 5) {
+                    Image(systemName: "target")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color(red: 1.0, green: 0.58, blue: 0.0))
                     
-                    Text("GOAL FINISH & TARGET PACING")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Color.secondary)
-                        .tracking(0.8)
+                    Text("Target Time")
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color(red: 1.0, green: 0.58, blue: 0.0))
+                    
+                    Spacer()
                 }
                 
-                Spacer()
-                
-                Text(effortBadgeText)
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundStyle(effortBadgeColor)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(effortBadgeColor.opacity(0.16))
-                    .clipShape(Capsule())
-            }
-            
-            // Main Big Digital Clock Card + Race Start/Finish Clock Pill
-            VStack(alignment: .leading, spacing: 6) {
+                // Big Digital Clock
                 let dynamicFinish = strategy.dynamicGoalFinishFormatted(
                     effortFactor: appState.effortFactor,
                     pitstopSeconds: appState.pitstopDurationSeconds
                 )
+                Text(dynamicFinish)
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .foregroundStyle(Theme.textPrimary)
+                    .monospacedDigit()
                 
-                HStack(alignment: .firstTextBaseline) {
-                    Text(dynamicFinish)
-                        .font(.system(size: 38, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.textPrimary)
-                        .monospacedDigit()
-                    
-                    Spacer()
-                    
-                    // Race Start & Predicted Clock Finish Pill (Tap to configure flag-off time)
-                    Button {
-                        showingRaceStartTimePicker = true
-                    } label: {
-                        HStack(spacing: 5) {
-                            Image(systemName: "clock.fill")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(Theme.neonOrange)
-                            Text("\(formattedRaceStart) → \(strategy.dynamicGoalFinishClock(raceStartTime: appState.raceStartTime, effortFactor: appState.effortFactor))")
-                                .font(.system(size: 11, weight: .bold, design: .rounded))
-                                .foregroundStyle(Theme.textPrimary)
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 8, weight: .bold))
-                                .foregroundStyle(Color.secondary)
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.capsule)
-                    .controlSize(.mini)
-                    .tint(Color.secondary)
-                }
-                
-                Text("ESTIMASI TOTAL DURASI (WAKTU BERGERAK + ISTIRAHAT POS)")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
-                    .tracking(0.5)
-                
-                // Visual Time Allocation Bar (Moving vs Station Rest)
-                timeAllocationBar
-            }
-            
-            // Effort Slider with Multi-spectrum Gradient
-            VStack(alignment: .leading, spacing: 6) {
+                // Custom Effort Slider (Tortoise - Dotted Track - Hare)
                 EffortSliderView(value: Binding(
                     get: { appState.effortSliderValue },
                     set: { appState.effortSliderValue = $0 }
                 ))
+                .padding(.top, 2)
+                
+                // 3-Column Summary Metrics
+                HStack(spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(strategy.dynamicAveragePaceFormatted(effortFactor: appState.effortFactor))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("Average Pace")
+                            .font(.system(size: 10, weight: .regular))
+                            .foregroundStyle(Color.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(strategy.dynamicAverageGAPFormatted(effortFactor: appState.effortFactor))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("Average GAP")
+                            .font(.system(size: 10, weight: .regular))
+                            .foregroundStyle(Color.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(String(format: "%.0f m", strategy.totalElevationGain))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("Elevation")
+                            .font(.system(size: 10, weight: .regular))
+                            .foregroundStyle(Color.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .padding(.top, 4)
             }
-            .padding(.vertical, 2)
-            
-            // 3-Column Metrics Grid (Apple Fitness Pillar Layout)
-            HStack(spacing: 8) {
-                // Column 1: Average Actual Pace
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("AVG PACE")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color.secondary)
-                        .tracking(0.5)
-                    
-                    Text(strategy.dynamicAveragePaceFormatted(effortFactor: appState.effortFactor))
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.textPrimary)
-                    
-                    Text("Kecepatan riil gunung")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color(uiColor: .secondaryLabel))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Divider()
-                    .frame(height: 38)
-                    .background(Theme.borderGray)
-                
-                // Column 2: Average GAP
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("TARGET GAP")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color.secondary)
-                        .tracking(0.5)
-                    
-                    Text(strategy.dynamicAverageGAPFormatted(effortFactor: appState.effortFactor))
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.neonOrange)
-                    
-                    Text("Ekuivalen jalan datar")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color(uiColor: .secondaryLabel))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Divider()
-                    .frame(height: 38)
-                    .background(Theme.borderGray)
-                
-                // Column 3: Elevation Gain
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("TOTAL D+")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color.secondary)
-                        .tracking(0.5)
-                    
-                    Text(String(format: "+%.0f m", strategy.totalElevationGain))
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.textPrimary)
-                    
-                    Text("Total tanjakan rute")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color(uiColor: .secondaryLabel))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(12)
-            .background(Theme.surfaceGray)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            
-            // Trail Running Science Insight Callout (Apple Health Style)
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "mountain.2.fill")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Theme.neonOrange)
-                    .padding(.top, 2)
-                
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Konteks Trail: Average Pace vs. GAP")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Theme.textPrimary)
-                    
-                    Text("Pace riil (\(strategy.dynamicAveragePaceFormatted(effortFactor: appState.effortFactor))) melambat drastis di tanjakan gunung (power hike). Namun GAP (\(strategy.dynamicAverageGAPFormatted(effortFactor: appState.effortFactor))) mencerminkan beban fisiologis & metabolisme detak jantung Anda yang tetap stabil setara jalan datar.")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color(uiColor: .secondaryLabel))
-                        .lineSpacing(2)
-                }
-            }
-            .padding(12)
-            .background(Theme.neonOrange.opacity(0.06))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(14)
+            .background(Theme.slateGray)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Theme.neonOrange.opacity(0.18), lineWidth: 0.8)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Theme.cardBorder, lineWidth: 0.8)
             )
+            .shadow(color: Color.black.opacity(0.03), radius: 5, y: 1.5)
         }
-        .padding(16)
-        .background(Theme.slateGray)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Theme.cardBorder, lineWidth: 0.8)
-        )
-        .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
     }
     
-    // MARK: - Time Allocation Bar (Moving Time vs Station Stop Rest)
+    // MARK: - Water Station Summary Card (Screen 2)
     
-    private var timeAllocationBar: some View {
-        let movingSecs = strategy.dynamicTotalMovingSeconds(effortFactor: appState.effortFactor)
-        let stopSecs = appState.pitstopDurationSeconds
-        let totalSecs = max(1, movingSecs + stopSecs)
-        let movingRatio = movingSecs / totalSecs
-        let stopRatio = stopSecs / totalSecs
-        
-        return VStack(spacing: 6) {
-            GeometryReader { barGeo in
-                HStack(spacing: 2) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Theme.neonOrange)
-                        .frame(width: max(4, barGeo.size.width * CGFloat(movingRatio)))
-                    
-                    if stopSecs > 0 {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Theme.warningYellow)
-                            .frame(width: max(4, barGeo.size.width * CGFloat(stopRatio)))
-                    }
-                }
-            }
-            .frame(height: 5)
-            
-            HStack {
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(Theme.neonOrange)
-                        .frame(width: 6, height: 6)
-                    Text("Lari & Hike: \(strategy.dynamicTotalMovingFormatted(effortFactor: appState.effortFactor))")
-                        .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color.secondary)
-                }
+    private var waterStationSummaryCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 5) {
+                Image(systemName: "drop.fill")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Color(red: 0.0, green: 0.48, blue: 1.0))
+                
+                Text("Total time spent at Water Station")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.0, green: 0.48, blue: 1.0))
                 
                 Spacer()
-                
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(Theme.warningYellow)
-                        .frame(width: 6, height: 6)
-                    Text("Pos Istirahat: \(Int(stopSecs / 60))m")
-                        .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color.secondary)
-                }
             }
+            
+            let stopSecs = Int(appState.pitstopDurationSeconds)
+            let hours = stopSecs / 3600
+            let minutes = (stopSecs % 3600) / 60
+            let seconds = stopSecs % 60
+            let timeStr = String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+            
+            Text(timeStr)
+                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .foregroundStyle(Theme.textPrimary)
+                .monospacedDigit()
         }
-        .padding(.top, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Theme.slateGray)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Theme.cardBorder, lineWidth: 0.8)
+        )
+        .shadow(color: Color.black.opacity(0.03), radius: 5, y: 1.5)
+    }
+    
+    // MARK: - Helpers
+    
+    private func formatMeters(_ meters: Double) -> String {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.groupingSeparator = "."
+        f.maximumFractionDigits = 0
+        let str = f.string(from: NSNumber(value: meters)) ?? String(format: "%.0f", meters)
+        return "\(str) m"
     }
     
     // MARK: - Race Start Time Picker Sheet
@@ -621,7 +618,7 @@ struct CourseVisualizerView: View {
             showingWatchSimulator = true
         } label: {
             Label("Sync to Apple Watch", systemImage: "applewatch.radiowaves.left.and.right")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .font(.system(size: 15, weight: .bold, design: .rounded))
                 .frame(maxWidth: .infinity)
                 .frame(height: 38)
         }
@@ -630,7 +627,7 @@ struct CourseVisualizerView: View {
         .controlSize(.large)
         .tint(Theme.neonOrange)
         .foregroundStyle(.black)
-        .padding(.top, 6)
+        .padding(.top, 4)
     }
     
     // MARK: - Feedback Badge
