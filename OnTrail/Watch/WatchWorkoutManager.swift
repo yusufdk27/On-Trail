@@ -45,10 +45,18 @@ final class WatchWorkoutManager: NSObject {
         var color: Color {
             switch self {
             case .zone1: return .blue
+            #if os(watchOS)
+            // watchOS target: Theme uses UIColor which is unavailable — use raw Color values.
+            case .zone2: return Color(red: 0.196, green: 0.843, blue: 0.294) // #32D74B green
+            case .zone3: return Color(red: 1.0, green: 0.839, blue: 0.039)   // #FFD60A yellow
+            case .zone4: return Color(red: 1.0, green: 0.369, blue: 0.0)     // #FF5E00 orange
+            case .zone5: return Color(red: 1.0, green: 0.271, blue: 0.227)   // #FF453A red
+            #else
             case .zone2: return Theme.successGreen
             case .zone3: return Theme.warningYellow
             case .zone4: return Theme.neonOrange
             case .zone5: return Theme.dangerRed
+            #endif
             }
         }
     }

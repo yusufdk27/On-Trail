@@ -1,0 +1,1 @@
+../../OnTrail/Watch/AntiDNFHapticManager.swift
