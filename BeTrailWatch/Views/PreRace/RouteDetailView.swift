@@ -106,7 +106,7 @@ struct RouteDetailView: View {
             .padding(.vertical, 6)
 
             Text("Elevation Profile")
-                .font(WatchTheme.labelFont(size: 12))
+                .font(WatchTheme.preRaceSecondary)
                 .foregroundStyle(WatchTheme.textSecondary)
                 .padding(.horizontal, 12)
                 .padding(.bottom, 12)
@@ -118,7 +118,7 @@ struct RouteDetailView: View {
                 coordinator.startRace(with: strategy)
             } label: {
                 Text("Start Race")
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .font(.system(size: 17, weight: .bold, design: .default))
                     .foregroundStyle(.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
@@ -142,11 +142,14 @@ struct RouteDetailView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(value)
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(WatchTheme.preRacePrimary)
                     .foregroundStyle(WatchTheme.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 Text(label)
-                    .font(WatchTheme.labelFont(size: 12))
+                    .font(WatchTheme.preRaceSecondary)
                     .foregroundStyle(WatchTheme.textSecondary)
+                    .lineLimit(1)
             }
             Spacer()
             Image(systemName: icon)

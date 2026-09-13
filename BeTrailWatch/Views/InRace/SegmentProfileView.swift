@@ -24,9 +24,11 @@ struct SegmentProfileView: View {
 
             // MARK: Header — Elapsed Timer (Neon Yellow)
             Text(formatElapsed(workout.elapsedTimeSeconds))
-                .font(WatchTheme.timerFont(size: 34))
+                .font(WatchTheme.inRacePrimaryValue)
                 .foregroundStyle(WatchTheme.neonYellow)
                 .monospacedDigit()
+                .minimumScaleFactor(0.75)
+                .lineLimit(1)
 
             // MARK: Active Elevation Profile Curve
             ElevationProfileCurve(
@@ -45,7 +47,7 @@ struct SegmentProfileView: View {
                     value: "\(coordinator.completedClimbs)/\(coordinator.totalClimbs)",
                     label: "CLIMBS",
                     valueColor: WatchTheme.textPrimary,
-                    valueSize: 32
+                    valueSize: 33
                 )
 
                 // 3/8 DESCENTS
@@ -53,7 +55,7 @@ struct SegmentProfileView: View {
                     value: "\(coordinator.completedDescents)/\(coordinator.totalDescents)",
                     label: "DESCENTS",
                     valueColor: WatchTheme.textPrimary,
-                    valueSize: 32
+                    valueSize: 33
                 )
 
                 // 1231M CURRENT ELEVATION
@@ -61,7 +63,7 @@ struct SegmentProfileView: View {
                     value: String(format: "%.0fM", store.currentElevation),
                     label: "CURRENT\nELEVATION",
                     valueColor: WatchTheme.textPrimary,
-                    valueSize: 32
+                    valueSize: 33
                 )
             }
         }

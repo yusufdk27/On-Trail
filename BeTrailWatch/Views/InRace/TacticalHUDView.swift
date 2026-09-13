@@ -29,9 +29,11 @@ struct TacticalHUDView: View {
 
             // Row 1 — Elapsed Duration (Neon Yellow)
             Text(formatElapsed(workout.elapsedTimeSeconds))
-                .font(WatchTheme.timerFont(size: 34))
+                .font(WatchTheme.inRacePrimaryValue)
                 .foregroundStyle(WatchTheme.neonYellow)
                 .monospacedDigit()
+                .minimumScaleFactor(0.75)
+                .lineLimit(1)
 
             // Row 2 — Live Pace vs Strategy (PaceStateRow)
             PaceStateRow(
@@ -45,18 +47,20 @@ struct TacticalHUDView: View {
                 value: remainingAscentFormatted,
                 label: "REMAINING\nASCENT",
                 valueColor: WatchTheme.textPrimary,
-                valueSize: 34
+                valueSize: 33
             )
 
             // Row 4 — Heart Rate (bare, no background bar)
             HStack(spacing: 5) {
                 Text(String(format: "%.0f", workout.heartRate))
-                    .font(WatchTheme.metricFont(size: 34, weight: .heavy))
+                    .font(WatchTheme.inRacePrimaryValue)
                     .foregroundStyle(WatchTheme.textPrimary)
                     .monospacedDigit()
+                    .minimumScaleFactor(0.75)
+                    .lineLimit(1)
 
                 Image(systemName: "heart.fill")
-                    .font(.system(size: 26, weight: .bold))
+                    .font(.system(size: 24, weight: .medium))
                     .foregroundStyle(WatchTheme.heartRed)
                     .scaleEffect(heartPulse ? 1.12 : 1.0)
                     .animation(
@@ -69,9 +73,11 @@ struct TacticalHUDView: View {
 
             // Row 5 — Distance
             Text(distanceFormatted)
-                .font(WatchTheme.metricFont(size: 30, weight: .heavy))
+                .font(WatchTheme.inRacePrimaryValue)
                 .foregroundStyle(WatchTheme.textPrimary)
                 .monospacedDigit()
+                .minimumScaleFactor(0.75)
+                .lineLimit(1)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)

@@ -60,11 +60,11 @@ struct HomeView: View {
                 Spacer().frame(height: 6)
 
                 Text("Race Route")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .font(WatchTheme.preRacePrimary)
                     .foregroundStyle(WatchTheme.textPrimary)
 
                 Text("\(coordinator.availableRoutes.count) routes")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(WatchTheme.preRaceSecondary)
                     .foregroundStyle(WatchTheme.textSecondary)
             }
             .padding(.vertical, 4)
@@ -89,11 +89,11 @@ struct HomeView: View {
                 Spacer().frame(height: 6)
 
                 Text("Record Activity")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .font(WatchTheme.preRacePrimary)
                     .foregroundStyle(WatchTheme.textPrimary)
 
                 Text("Free run mode")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(WatchTheme.preRaceSecondary)
                     .foregroundStyle(WatchTheme.textSecondary)
             }
             .padding(.vertical, 4)
@@ -109,11 +109,11 @@ struct HomeView: View {
                 .foregroundStyle(WatchTheme.neonGreen)
 
             Text("Free Run")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .font(WatchTheme.preRacePrimary)
                 .foregroundStyle(WatchTheme.textPrimary)
 
             Text("Record without a preset strategy")
-                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .font(WatchTheme.preRaceSecondary)
                 .foregroundStyle(WatchTheme.textSecondary)
                 .multilineTextAlignment(.center)
 
@@ -127,7 +127,7 @@ struct HomeView: View {
                 coordinator.startRace(with: freeRunStrategy)
             } label: {
                 Text("Start")
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.system(size: 16, weight: .bold, design: .default))
                     .foregroundStyle(.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)

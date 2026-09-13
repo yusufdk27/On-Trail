@@ -23,21 +23,22 @@ struct PaceStateRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
-            // LEFT: Large pace value
+            // LEFT: Large pace value (33pt, .medium, .rounded, monospacedDigit)
             Text(paceFormatted)
-                .font(WatchTheme.metricFont(size: 40, weight: .heavy))
+                .font(WatchTheme.inRacePrimaryValue)
+                .monospacedDigit()
                 .foregroundStyle(state.valueColor)
-                .minimumScaleFactor(0.6)
+                .minimumScaleFactor(0.7)
                 .lineLimit(1)
 
-            // RIGHT: 2-line uppercase label (status + target pace)
+            // RIGHT: 2-line uppercase label (12pt, .medium, .rounded)
             VStack(alignment: .leading, spacing: 1) {
                 Text(state.statusLabel)
-                    .font(WatchTheme.labelFont(size: 10))
+                    .font(WatchTheme.inRaceSecondaryLabel)
                     .foregroundStyle(state.valueColor)
 
                 Text(targetPaceFormatted)
-                    .font(WatchTheme.labelFont(size: 10))
+                    .font(WatchTheme.inRaceSecondaryLabel)
                     .foregroundStyle(state.valueColor.opacity(0.75))
             }
 
