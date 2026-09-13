@@ -42,19 +42,104 @@ enum WatchTheme {
     static let textSecondary = Color(white: 0.60)
     static let textTertiary  = Color(white: 0.40)
 
-    // MARK: Typography Helpers
-    /// Large metric value — SF Compact Rounded Bold.
-    static func metricFont(size: CGFloat, weight: Font.Weight = .medium) -> Font {
+    // MARK: Typography Tokens (In-Race & Pre-Race)
+    
+    // In-Race: SF Compact Rounded, High Glanceability
+    /// In-Race Primary Value — 33pt, weight .medium, design .rounded
+    static let inRacePrimaryValue: Font = .system(size: 33, weight: .medium, design: .rounded)
+    /// In-Race Secondary Label — 12pt, weight .medium, design .rounded
+    static let inRaceSecondaryLabel: Font = .system(size: 12, weight: .medium, design: .rounded)
+
+    // Pre-Race: SF Compact Default (.design: .default)
+    /// Pre-Race Primary — 17pt, weight .bold, design .default
+    static let preRacePrimary: Font = .system(size: 17, weight: .bold, design: .default)
+    /// Pre-Race Secondary — 17pt, weight .regular, design .default
+    static let preRaceSecondary: Font = .system(size: 17, weight: .regular, design: .default)
+
+    // MARK: Legacy & Dynamic Font Helpers
+    static func metricFont(size: CGFloat = 33, weight: Font.Weight = .medium) -> Font {
         .system(size: size, weight: weight, design: .rounded)
     }
-    /// Uppercase label — SF Compact Rounded Semibold.
-    static func labelFont(size: CGFloat = 12) -> Font {
-        .system(size: size, weight: .medium, design: .rounded)
+    static func labelFont(size: CGFloat = 12, weight: Font.Weight = .medium) -> Font {
+        .system(size: size, weight: weight, design: .rounded)
     }
-    /// Monospaced timer font — SF Compact Rounded Black.
-    static func timerFont(size: CGFloat = 32) -> Font {
-        .system(size: size, weight: .medium, design: .rounded)
+    static func timerFont(size: CGFloat = 33, weight: Font.Weight = .medium) -> Font {
+        .system(size: size, weight: weight, design: .rounded)
     }
+}
+
+// MARK: - Typography View Modifiers & Extensions
+
+struct InRacePrimaryValueModifier: ViewModifier {
+    var color: Color = .white
+
+    func body(content: Content) -> some View {
+        content
+            .font(WatchTheme.inRacePrimaryValue)
+            .monospacedDigit()
+            .foregroundStyle(color)
+            .minimumScaleFactor(0.75)
+            .lineLimit(1)
+    }
+}
+
+struct InRaceSecondaryLabelModifier: ViewModifier {
+    var color: Color = WatchTheme.textSecondary
+
+    func body(content: Content) -> some View {
+        content
+            .font(WatchTheme.inRaceSecondaryLabel)
+            .foregroundStyle(color)
+    }
+}
+
+struct PreRacePrimaryModifier: ViewModifier {
+    var color: Color = WatchTheme.textPrimary
+
+    func body(content: Content) -> some View {
+        content
+            .font(WatchTheme.preRacePrimary)
+            .foregroundStyle(color)
+    }
+}
+
+struct PreRaceSecondaryModifier: ViewModifier {
+    var color: Color = WatchTheme.textSecondary
+
+    func body(content: Content) -> some View {
+        content
+            .font(WatchTheme.preRaceSecondary)
+            .foregroundStyle(color)
+    }
+}
+
+extension View {
+    /// In-Race Primary Value: 33pt, .medium, .rounded, monospacedDigit
+    func inRacePrimaryValue(color: Color = .white) -> some View {
+        modifier(InRacePrimaryValueModifier(color: color))
+    }
+
+    /// In-Race Secondary Label: 12pt, .medium, .rounded
+    func inRaceSecondaryLabel(color: Color = WatchTheme.textSecondary) -> some View {
+        modifier(InRaceSecondaryLabelModifier(color: color))
+    }
+
+    /// Pre-Race Primary: 17pt, .bold, .default
+    func preRacePrimary(color: Color = WatchTheme.textPrimary) -> some View {
+        modifier(PreRacePrimaryModifier(color: color))
+    }
+
+    /// Pre-Race Secondary: 17pt, .regular, .default
+    func preRaceSecondary(color: Color = WatchTheme.textSecondary) -> some View {
+        modifier(PreRaceSecondaryModifier(color: color))
+    }
+}
+
+extension Font {
+    static let inRacePrimaryValue = WatchTheme.inRacePrimaryValue
+    static let inRaceSecondaryLabel = WatchTheme.inRaceSecondaryLabel
+    static let preRacePrimary = WatchTheme.preRacePrimary
+    static let preRaceSecondary = WatchTheme.preRaceSecondary
 }
 
 // MARK: - Pacing State
@@ -101,18 +186,19 @@ struct WatchMetricRow: View {
     let value: String
     let label: String
     var valueColor: Color = .white
-    var valueSize: CGFloat = 36
+    var valueSize: CGFloat = 33
 
     var body: some View {
         HStack(alignment: .center, spacing: 6) {
             Text(value)
-                .font(WatchTheme.metricFont(size: valueSize, weight: .heavy))
+                .font(.system(size: valueSize, weight: .medium, design: .rounded))
+                .monospacedDigit()
                 .foregroundStyle(valueColor)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
 
             Text(label)
-                .font(WatchTheme.labelFont(size: 11))
+                .font(WatchTheme.inRaceSecondaryLabel)
                 .foregroundStyle(WatchTheme.textSecondary)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)

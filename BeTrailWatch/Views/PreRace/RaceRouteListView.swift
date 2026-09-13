@@ -45,9 +45,10 @@ struct RouteCardRow: View {
 
                     // Route Name
                     Text(strategy.courseName)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .font(WatchTheme.preRacePrimary)
                         .foregroundStyle(WatchTheme.textPrimary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
 
                     // Distance · Estimated Time
                     HStack(spacing: 4) {
@@ -55,8 +56,10 @@ struct RouteCardRow: View {
                         Text("•")
                         Text(strategy.estimatedFinishTimeFormatted)
                     }
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(WatchTheme.preRaceSecondary)
                     .foregroundStyle(WatchTheme.cyan)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 }
             }
 
