@@ -124,7 +124,7 @@ struct HomeView: View {
                     checkpoints: [],
                     allTrackPoints: []
                 )
-                coordinator.startRace(with: freeRunStrategy)
+                coordinator.startCountdown(for: freeRunStrategy)
             } label: {
                 Text("Start")
                     .font(.system(size: 16, weight: .bold, design: .default))

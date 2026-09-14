@@ -21,6 +21,8 @@ final class WatchRaceCoordinator {
         case home
         /// Pre-race route detail / confirmation.
         case routeDetail(RaceStrategy)
+        /// Pre-race 3-2-1 countdown screen.
+        case countdown(RaceStrategy)
         /// Live race in progress.
         case activeRace(RaceStrategy)
         /// Race paused.
@@ -32,6 +34,7 @@ final class WatchRaceCoordinator {
             switch (lhs, rhs) {
             case (.home, .home): return true
             case (.routeDetail(let a), .routeDetail(let b)): return a.id == b.id
+            case (.countdown(let a), .countdown(let b)): return a.id == b.id
             case (.activeRace(let a), .activeRace(let b)): return a.id == b.id
             case (.pausedRace(let a), .pausedRace(let b)): return a.id == b.id
             case (.postRace(let a), .postRace(let b)): return a.id == b.id
@@ -51,7 +54,7 @@ final class WatchRaceCoordinator {
 
     var currentStrategy: RaceStrategy? {
         switch appState {
-        case .routeDetail(let s), .activeRace(let s), .pausedRace(let s), .postRace(let s):
+        case .routeDetail(let s), .countdown(let s), .activeRace(let s), .pausedRace(let s), .postRace(let s):
             return s
         case .home:
             return nil
@@ -72,7 +75,12 @@ final class WatchRaceCoordinator {
         appState = .routeDetail(strategy)
     }
 
-    /// User confirms Start Race in RouteDetailView.
+    /// User taps "Start Race" in RouteDetailView — triggers 3-2-1 countdown.
+    func startCountdown(for strategy: RaceStrategy) {
+        appState = .countdown(strategy)
+    }
+
+    /// Triggers actual HKWorkoutSession and transitions to active race.
     func startRace(with strategy: RaceStrategy) {
         // Sync strategy to the existing store/workout managers
         WatchStrategyStore.shared.strategy = strategy

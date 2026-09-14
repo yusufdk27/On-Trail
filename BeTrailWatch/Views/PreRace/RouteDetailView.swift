@@ -113,9 +113,9 @@ struct RouteDetailView: View {
 
             Spacer()
 
-            // Start Race CTA — neon green capsule
+            // Start Race CTA — neon green capsule (triggers 3-2-1 countdown)
             Button {
-                coordinator.startRace(with: strategy)
+                coordinator.startCountdown(for: strategy)
             } label: {
                 Text("Start Race")
                     .font(.system(size: 17, weight: .bold, design: .default))
