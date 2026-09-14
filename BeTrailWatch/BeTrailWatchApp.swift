@@ -52,7 +52,11 @@ struct AppRootView: View {
                         }
                 }
 
-            // MARK: Active Race — Digital Crown Tabbed HUD
+            // MARK: Pre-Race — 3-2-1 Countdown
+            case .countdown(let strategy):
+                WorkoutCountdownView(strategy: strategy)
+
+            // MARK: Active Race — 3-Screen Horizontal TabView + Vertical Snapping Metrics
             case .activeRace(let strategy):
                 ActiveRaceContainerView(strategy: strategy)
 
